@@ -1,5 +1,6 @@
 package com.sky.service;
 
+import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.entity.Employee;
 
@@ -8,8 +9,15 @@ public interface EmployeeService {
     /**
      * 员工登录
      * @param employeeLoginDTO
+     * 员工信息
      * @return
      */
     Employee login(EmployeeLoginDTO employeeLoginDTO);
 
+    /**
+     * 新增员工
+     * @param employeeDTO
+     * 员工数据传输对象，包含要新增的员工信息
+     */
+    void save(EmployeeDTO employeeDTO);
 }
