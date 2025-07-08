@@ -14,6 +14,7 @@ import com.sky.vo.EmployeeLoginVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.converters.ResponseSupportConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +35,8 @@ public class EmployeeController {
     private EmployeeService employeeService;
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private ResponseSupportConverter responseSupportConverter;
 
     /**
      * 登录
@@ -127,4 +130,25 @@ public class EmployeeController {
         return Result.success();
     }
 
+    /**
+     * 根据员工id回显数据
+     * @return
+     */
+    @GetMapping("/{id}")
+    @Operation(summary = "回显数据",description = "根据员工id回显数据")
+    public Result<Employee> getEmployeeById(@PathVariable Integer id) {
+        Employee employee = employeeService.getById(id);
+        return Result.success(employee);
+    }
+
+    /**
+     * 编辑员工信息
+     * @return
+     */
+    @PutMapping
+    @Operation(summary = "编辑员工信息",description = "编辑员工信息接口")
+    public Result updateAdmin(@RequestBody EmployeeDTO employeeDTO) {
+        employeeService.updateEmp(employeeDTO);
+        return Result.success();
+    }
 }

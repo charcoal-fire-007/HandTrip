@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
@@ -87,13 +88,26 @@ public class EmployeeServiceImpl implements EmployeeService {
     public PageResult page(EmployeePageQueryDTO employeePageQueryDTO){
             PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
             Page<Employee> page = employeeMapper.select(employeePageQueryDTO);
-        System.out.println("--------------------------------------------Total的值："+page.getTotal());
         return new PageResult(page.getTotal(), page.getResult());
     }
 
     @Override
     public void updateStatus(Integer status, Long id) {
         Employee employee = Employee.builder().id(id).status(status).build();
+        employeeMapper.update(employee);
+    }
+
+    @Override
+    public Employee getById(Integer id) {
+        Employee employee =  employeeMapper.selectById(id);
+        employee.setPassword("******");
+        return employee;
+    }
+
+    @Override
+    public void updateEmp(EmployeeDTO employeeDTO) {
+        Employee employee = Employee.builder().updateTime(LocalDateTime.now()).updateUser(BaseContext.getCurrentId()).build();
+        BeanUtils.copyProperties(employeeDTO, employee);
         employeeMapper.update(employee);
     }
 }
