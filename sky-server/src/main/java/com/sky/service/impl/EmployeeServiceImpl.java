@@ -90,4 +90,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         System.out.println("--------------------------------------------Total的值："+page.getTotal());
         return new PageResult(page.getTotal(), page.getResult());
     }
+
+    @Override
+    public void updateStatus(Integer status, Long id) {
+        Employee employee = Employee.builder().id(id).status(status).build();
+        employeeMapper.update(employee);
+    }
 }
