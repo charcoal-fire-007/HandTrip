@@ -67,20 +67,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void save(EmployeeDTO employeeDTO) {
-        Employee employee = new Employee();
-//        对象属性拷贝
+        Employee employee = Employee.builder()
+                .status(StatusConstant.ENABLE)
+                .password(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes(StandardCharsets.UTF_8)))
+                .build();
+        
         BeanUtils.copyProperties(employeeDTO, employee);
-//        员工状态
-        employee.setStatus(StatusConstant.ENABLE);
-//        密码
-        employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes(StandardCharsets.UTF_8)));
-//        时间
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
-//        记录当前记录创建人和修改人id
-        employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
-
         employeeMapper.insert(employee);
     }
 
@@ -93,8 +85,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void updateStatus(Integer status, Long id) {
-        Employee employee = Employee.builder().id(id).status(status).build();
-        employeeMapper.update(employee);
+        employeeMapper.update(Employee.builder().id(id).status(status).build());
     }
 
     @Override
@@ -106,7 +97,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void updateEmp(EmployeeDTO employeeDTO) {
-        Employee employee = Employee.builder().updateTime(LocalDateTime.now()).updateUser(BaseContext.getCurrentId()).build();
+        Employee employee = Employee.builder().build();
         BeanUtils.copyProperties(employeeDTO, employee);
         employeeMapper.update(employee);
     }
