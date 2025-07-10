@@ -2,4 +2,33 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.DishMapper">
+    <delete id="delete" parameterType="java.util.List">
+        delete  from dish where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="select" resultType="com.sky.vo.DishVO">
+        select d.* , c.name as categoryName
+        from dish d 
+        left outer join category c on d.category_id = c.id
+        <where>
+            <if test="categoryId != null and categoryId != ''">
+                and d.category_id = #{categoryId}
+            </if>
+            <if test="name != null and name != ''">
+                and d.name like concat('%',#{name},'%')
+            </if>
+            <if test="status != null">
+                and d.status = #{status}
+            </if>
+        </where>
+        order by d.create_time desc
+    </select>
+    <select id="statusById" resultType="java.lang.Integer">
+        SELECT d.status FROM dish d WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
 </mapper>
