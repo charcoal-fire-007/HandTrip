@@ -2,6 +2,7 @@ package com.sky.mapper;
 
 import com.github.pagehelper.Page;
 import com.sky.annotation.AutoFill;
+import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.enumeration.OperationType;
 import com.sky.vo.DishVO;
@@ -30,11 +31,15 @@ public interface DishMapper {
     @Select("select count(id) from dish where category_id = #{categoryId}")
     Integer countByCategoryId(Long categoryId);
 
-    Page<DishVO> select();
+    Page<DishVO> select(DishPageQueryDTO dishPageQueryDTO);
 
 
     List<Integer> statusById(List<String> ids);
 
     void delete(List<String> ids);
 
+    DishVO selectById(Long id);
+
+    @AutoFill(value = OperationType.UPDATE)
+    void update(Dish dish);
 }

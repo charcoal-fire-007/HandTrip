@@ -39,14 +39,16 @@ public class DishServiceImpl implements DishService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void save(DishDTO dishDTO) {
-        Dish dish  = Dish.builder().build();
+        Dish dish = Dish.builder().build();
         BeanUtils.copyProperties(dishDTO, dish);
         dishMapper.insert(dish);
         Long dishId = dish.getId();
         log.info("添加菜品获取到的菜品（无口味）{}", dish);
-        List<DishFlavor> dishFlavors= dishDTO.getFlavors();
-        if(!CollectionUtils.isEmpty(dishFlavors)){
-            dishFlavors.forEach(dishFlavor -> {dishFlavor.setDishId(dishId);});
+        List<DishFlavor> dishFlavors = dishDTO.getFlavors();
+        if (!CollectionUtils.isEmpty(dishFlavors)) {
+            dishFlavors.forEach(dishFlavor -> {
+                dishFlavor.setDishId(dishId);
+            });
             dishFlavorMapper.insert(dishFlavors);
         }
     }
@@ -54,9 +56,9 @@ public class DishServiceImpl implements DishService {
     @Override
     public PageResult page(DishPageQueryDTO dishPageQueryDTO) {
 
-        PageHelper.startPage(dishPageQueryDTO.getPage(),dishPageQueryDTO.getPageSize());
-        Page<DishVO>  page = dishMapper.select();
-        return new PageResult(page.getTotal(),page.getResult());
+        PageHelper.startPage(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
+        Page<DishVO> page = dishMapper.select(dishPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -64,15 +66,15 @@ public class DishServiceImpl implements DishService {
     public void delete(List<String> ids) {
 
         List<Integer> status = dishMapper.statusById(ids);
-        for(Integer statusId : status){
-            if (Objects.equals(statusId, StatusConstant.ENABLE)){
+        for (Integer statusId : status) {
+            if (Objects.equals(statusId, StatusConstant.ENABLE)) {
                 //状态
                 throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
             }
         }
 
         List<Long> dishids = setmealDishMapper.selectSetmealDishIds(ids);
-        if(!dishids.isEmpty() && dishids != null){
+        if (!dishids.isEmpty() && dishids != null) {
             //套餐
             throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
         }
@@ -80,5 +82,41 @@ public class DishServiceImpl implements DishService {
         dishFlavorMapper.delete(ids);
         dishMapper.delete(ids);
 
+    }
+
+    @Override
+    public DishVO getById(Long id) {
+        DishVO dish = dishMapper.selectById(id);
+        List<DishFlavor> list = dishFlavorMapper.selectById(id);
+        log.info("回显数据口味信息：{}", list);
+        dish.setFlavors(list);
+        return dish;
+    }
+
+    @Override
+    public void updateDish(DishDTO dishDTO) {
+        Dish dish = Dish.builder().build();
+        BeanUtils.copyProperties(dishDTO, dish);
+        dishMapper.update(dish);
+
+        dishFlavorMapper.deleteById(dish.getId());
+
+        List<DishFlavor> dishFlavors = dishDTO.getFlavors();
+
+        if (!CollectionUtils.isEmpty(dishFlavors)) {
+            dishFlavors.forEach(dishFlavor -> {
+                dishFlavor.setDishId(dish.getId());
+            });
+            dishFlavorMapper.insert(dishFlavors);
+        }
+    }
+
+    @Override
+    public void updateStatus(Integer status, Long id) {
+        Dish dish = Dish.builder()
+            .id(id)
+            .status(status)
+            .build();
+        dishMapper.update(dish);
     }
 }

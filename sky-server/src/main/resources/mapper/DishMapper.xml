@@ -2,6 +2,36 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.DishMapper">
+    <update id="update">
+        update dish 
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="image != null and image != ''">
+                image = #{image},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+        </set> 
+        where id = #{id}
+    </update>
     <delete id="delete" parameterType="java.util.List">
         delete  from dish where id in
         <foreach collection="ids" item="id" open="(" close=")" separator=",">
@@ -30,5 +60,10 @@
         <foreach collection="ids" item="id" open="(" close=")" separator=",">
             #{id}
         </foreach>
+    </select>
+    <select id="selectById" resultType="com.sky.vo.DishVO">
+        select d.* , c.name as categoryName
+        from dish d
+        left outer join category c on d.category_id = c.id where d.id = #{id}
     </select>
 </mapper>
