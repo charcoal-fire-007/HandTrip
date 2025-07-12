@@ -21,7 +21,7 @@ public class AdminShopController {
     private RedisTemplate redisTemplate;
 
     @GetMapping("/status")
-    @Operation(summary = "获取当前营业状态",description = "获取当前营业状态(客户端)")
+    @Operation(summary = "获取当前营业状态",description = "获取当前营业状态(客户端B)")
     public Result<Integer> getByStatus() {
         Integer status = (Integer)redisTemplate.opsForValue().get(KEY);
         log.info("获取到的营业状态：{}",status == 1?"营业中":"打烊中");
@@ -30,7 +30,7 @@ public class AdminShopController {
 
 
     @PutMapping("/{status}")
-    @Operation(summary = "修改当前营业状态",description = "修改当前营业状态(客户端)")
+    @Operation(summary = "修改当前营业状态",description = "修改当前营业状态(客户端B)")
     public Result putByStatus(@PathVariable Integer status) {
         log.info("获取到的营业状态：{}",status == 1?"营业中":"打烊中");
         redisTemplate.opsForValue().set(KEY,status);
