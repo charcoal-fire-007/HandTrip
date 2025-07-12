@@ -20,17 +20,22 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @Slf4j
-@Component
+//@Component
 public class AliOssUtil {
 
-   @Autowired
-   AliyunOSSProperties properties;
+    private String endpoint;
+    private String bucketName;
+    private String region;
+//
+//   @Autowired
+//   AliyunOSSProperties properties;
 
    public String upload(byte[] data, String originalFileName)  throws Exception {
-       String endpoint = properties.getEndpoint();
-       String bucketName = properties.getBucketName();
-       String region = properties.getRegion();
+//       String endpoint = properties.getEndpoint();
+//       String bucketName = properties.getBucketName();
+//       String region = properties.getRegion();
 
+       //环境中需要有AssKey配置
        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
 
        String dir = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
@@ -42,6 +47,7 @@ public class AliOssUtil {
 
        OSS ossClient = OSSClientBuilder.create()
                .endpoint(endpoint)
+               //环境中需要有AssKey配置
                .credentialsProvider(credentialsProvider)
                .clientConfiguration(clientBuilderConfiguration)
                .region(region)

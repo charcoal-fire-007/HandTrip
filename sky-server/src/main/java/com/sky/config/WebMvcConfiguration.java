@@ -5,6 +5,7 @@ import com.sky.json.JacksonObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,6 +53,33 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                         .version("3.0")
                         .description("苍穹外卖项目接口文档"));
     }
+
+
+    /**
+     * 用户端（C端）接口分组
+     */
+    @Bean
+    public GroupedOpenApi userApi() {
+        return GroupedOpenApi.builder()
+                .group("用户端")
+                .pathsToMatch("/user/**")
+                .packagesToScan("com.sky.controller.user")
+                .build();
+    }
+
+    /**
+     * 管理端（B端 / 后台）接口分组
+     */
+    @Bean
+    public GroupedOpenApi adminApi() {
+        return GroupedOpenApi.builder()
+                .group("管理端")
+                .pathsToMatch("/admin/**")
+                .packagesToScan("com.sky.controller.admin")
+                .build();
+    }
+
+
 
     //静态资源映射
     @Override
