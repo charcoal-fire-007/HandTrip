@@ -18,6 +18,10 @@
             </if>
         </where>
     </select>
+    <select id="getById" resultType="com.sky.entity.Setmeal">
+        select *from setmeal
+        where id = #{id}
+    </select>
 
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

@@ -5,16 +5,22 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Dish;
 import com.sky.entity.Setmeal;
+import com.sky.entity.SetmealDish;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
 import com.sky.vo.SetmealVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+@Slf4j
 @Service
 public class SetmealServiceImpl  implements SetmealService {
 
@@ -31,19 +37,32 @@ public class SetmealServiceImpl  implements SetmealService {
         return new PageResult(page.getTotal(),page.getResult());
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void save(SetmealDTO setmealDTO) {
         Setmeal setmeal = Setmeal.builder().build();
         BeanUtils.copyProperties(setmealDTO,setmeal);
-        try{
-            setmealMapper.insert(setmeal);
-        }catch (Exception e){}
+        setmealMapper.insert(setmeal);
+
 
         Long id = setmeal.getId();
+        log.info("生成的添加套餐后ID值为{}",id);
         if (!setmealDTO.getSetmealDishes().isEmpty()) {
             setmealDTO.getSetmealDishes().forEach(setmealDish -> setmealDish.setSetmealId(id));
+            log.info("插入后的值{}",setmealDTO.getSetmealDishes());
+            setmealDishMapper.insert(setmealDTO.getSetmealDishes());
         }
+    }
 
-        setmealDishMapper.insert(setmealDTO.getSetmealDishes());
+    @Override
+    public SetmealVO getById(Long id) {
+        SetmealVO setmealVO = SetmealVO.builder().build();
+
+        Setmeal setmeal = setmealMapper.getById(id);
+        List<SetmealDish> list = setmealDishMapper.getById(id);
+
+        BeanUtils.copyProperties(setmeal,setmealVO);
+        setmealVO.setSetmealDishes(list);
+        return setmealVO;
     }
 }

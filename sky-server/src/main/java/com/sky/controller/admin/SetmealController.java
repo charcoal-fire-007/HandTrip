@@ -39,4 +39,10 @@ public class SetmealController {
         setmealService.save(setmealDTO);
         return Result.success();
     }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "根据id查询套餐",description = "根据套餐id查询套餐和菜品的关联关系")
+    public Result<SetmealVO> list(@PathVariable Long id) {
+        return Result.success(setmealService.getById(id));
+    }
 }
