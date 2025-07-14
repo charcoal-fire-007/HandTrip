@@ -144,4 +144,6 @@ public class DishServiceImpl implements DishService {
     public List<Dish> getListById(Long id) {
         return dishMapper.selectList(id);
     }
+
+
 }

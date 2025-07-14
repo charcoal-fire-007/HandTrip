@@ -2,21 +2,38 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sky.mapper.SetmealMapper">
+    <update id="update">
+        update setmeal
+        <set>
+            name = #{name},
+            category_id = #{categoryId},
+            price = #{price},
+            image = #{image},
+            description = #{description},
+            status = #{status},
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        </set>
+        where id = #{id}
+    </update>
 
     <select id="select" resultType="com.sky.vo.SetmealVO">
-        select *,c.name categoryName from setmeal s
-        left join category c on s.category_id = c.id
+        SELECT s.*,
+        c.name AS categoryName
+        FROM setmeal s
+        LEFT JOIN category c ON s.category_id = c.id
         <where>
             <if test="name != null and name != ''">
-                and name = #{name}
+                AND s.name like concat ('%',#{name},'%')
             </if>
-            <if test="categoryId != null and categoryId != '' ">
-                and category_id = #{categoryId}
+            <if test="categoryId != null and categoryId != ''">
+                AND s.category_id = #{categoryId}
             </if>
             <if test="status != null">
-                and status = #{status}
+                AND s.status = #{status}
             </if>
         </where>
+        order by s.update_time desc
     </select>
     <select id="getById" resultType="com.sky.entity.Setmeal">
         select *from setmeal

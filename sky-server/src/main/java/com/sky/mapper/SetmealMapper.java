@@ -26,4 +26,7 @@ public interface SetmealMapper {
     void insert(Setmeal setmeal);
 
     Setmeal getById(Long id);
+
+    @AutoFill(value = OperationType.UPDATE)
+    void update(Setmeal setmeal);
 }

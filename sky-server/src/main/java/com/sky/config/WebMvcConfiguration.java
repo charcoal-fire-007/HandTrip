@@ -54,7 +54,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
      */
     @Bean
     public OpenAPI openAPI() {
-        log.info("开始初始化OpenAPI文档...");
+//        log.info("初始化OpenAPI文档...");
         return new OpenAPI()
                 .info(new Info()
                         .title("苍穹外卖项目接口文档")
@@ -68,6 +68,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
      */
     @Bean
     public GroupedOpenApi userApi() {
+        log.info("初始化完成用户端OpenAPI文档...");
         return GroupedOpenApi.builder()
                 .group("用户端")
                 .pathsToMatch("/user/**")
@@ -80,6 +81,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
      */
     @Bean
     public GroupedOpenApi adminApi() {
+        log.info("初始化完成管理端OpenAPI文档...");
         return GroupedOpenApi.builder()
                 .group("管理端")
                 .pathsToMatch("/admin/**")

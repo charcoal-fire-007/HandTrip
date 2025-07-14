@@ -45,4 +45,12 @@ public class SetmealController {
     public Result<SetmealVO> list(@PathVariable Long id) {
         return Result.success(setmealService.getById(id));
     }
+
+    @PutMapping
+    @Operation(summary = "修改套餐",description = "修改套餐接口")
+    public Result update(@RequestBody SetmealDTO setmealDTO) {
+        setmealService.update(setmealDTO);
+        return Result.success();
+    }
+
 }
