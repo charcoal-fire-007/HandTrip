@@ -10,6 +10,7 @@ import com.sky.service.DishService;
 import com.sky.service.impl.DishServiceImpl;
 import com.sky.vo.DishVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +77,13 @@ public class DishController {
         dishService.updateStatus(status,id);
         return Result.success();
     }
-    
+
+    @GetMapping("/list")
+    public Result<List<Dish>> list(@RequestParam("categoryId") Long id) {
+        log.info("接收到的菜品分类id{}",id);
+        List<Dish> list = dishService.getListById(id);
+        return Result.success(list);
+    }
+
     
 }

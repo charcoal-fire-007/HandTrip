@@ -6,7 +6,9 @@ sky:
     database: sky_take_out
     username: root
     password: root
-
+  wechat:
+    appid: wxe7048aa119ed2be5
+    secret: 6f8c4ac82281f4bf3aa7fdf9a58c882b
 # 添加完整的Spring数据源配置
 spring:
   datasource:
