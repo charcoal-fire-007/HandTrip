@@ -50,7 +50,6 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
     /**
      * 通过knife4j生成接口文档
-     * @return
      */
     @Bean
     public OpenAPI openAPI() {

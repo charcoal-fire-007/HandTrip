@@ -75,7 +75,7 @@ public class DishServiceImpl implements DishService {
         }
 
         List<Long> dishids = setmealDishMapper.selectSetmealDishIds(ids);
-        if (!dishids.isEmpty() && dishids != null) {
+        if (dishids != null && !dishids.isEmpty() ) {
             //套餐
             throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
         }
