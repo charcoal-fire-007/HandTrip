@@ -5,17 +5,33 @@
     <update id="update">
         update setmeal
         <set>
-            name = #{name},
-            category_id = #{categoryId},
-            price = #{price},
-            image = #{image},
-            description = #{description},
-            status = #{status},
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="categoryId != null and categoryId != ''">
+                category_id = #{categoryId},
+            </if>
+            <if test="price != null and price != ''">
+                price = #{price},
+            </if>
+            <if test="image != null and image != ''">
+                image = #{image},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
             update_time = #{updateTime},
             update_user = #{updateUser}
         </set>
         where id = #{id}
     </update>
+    <delete id="deleteById">
+            delete from setmeal where id = #{id}
+
+    </delete>
 
     <select id="select" resultType="com.sky.vo.SetmealVO">
         SELECT s.*,

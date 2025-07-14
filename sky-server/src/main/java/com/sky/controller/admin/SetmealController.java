@@ -10,9 +10,11 @@ import com.sky.vo.SetmealVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Delete;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -52,5 +54,20 @@ public class SetmealController {
         setmealService.update(setmealDTO);
         return Result.success();
     }
+
+    @PostMapping("status/{status}")
+    @Operation(summary = "修改套餐状态")
+    public Result updateStatus(@PathVariable Integer status, @RequestParam Long id) {
+        setmealService.updateStatus(status, id);
+        return Result.success();
+    }
+
+    @DeleteMapping
+    @Tag(name = "批量删除套餐")
+    public Result delete(@RequestParam List<Long> ids){
+        setmealService.deleteBatch(ids);
+        return Result.success();
+    }
+
 
 }
