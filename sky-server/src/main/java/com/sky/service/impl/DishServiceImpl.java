@@ -47,9 +47,7 @@ public class DishServiceImpl implements DishService {
         log.info("添加菜品获取到的菜品（无口味）{}", dish);
         List<DishFlavor> dishFlavors = dishDTO.getFlavors();
         if (!CollectionUtils.isEmpty(dishFlavors)) {
-            dishFlavors.forEach(dishFlavor -> {
-                dishFlavor.setDishId(dishId);
-            });
+            dishFlavors.forEach(dishFlavor -> dishFlavor.setDishId(dishId));
             dishFlavorMapper.insert(dishFlavors);
         }
     }
@@ -105,9 +103,7 @@ public class DishServiceImpl implements DishService {
         List<DishFlavor> dishFlavors = dishDTO.getFlavors();
 
         if (!CollectionUtils.isEmpty(dishFlavors)) {
-            dishFlavors.forEach(dishFlavor -> {
-                dishFlavor.setDishId(dish.getId());
-            });
+            dishFlavors.forEach(dishFlavor -> dishFlavor.setDishId(dish.getId()));
             dishFlavorMapper.insert(dishFlavors);
         }
     }
