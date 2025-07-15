@@ -18,6 +18,8 @@ import com.sky.vo.DishVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -40,16 +42,25 @@ public class DishServiceImpl implements DishService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void save(DishDTO dishDTO) {
-        Dish dish = Dish.builder().build();
+        Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO, dish);
+
         dishMapper.insert(dish);
         Long dishId = dish.getId();
-        log.info("添加菜品获取到的菜品（无口味）{}", dish);
-        List<DishFlavor> dishFlavors = dishDTO.getFlavors();
-        if (!CollectionUtils.isEmpty(dishFlavors)) {
-            dishFlavors.forEach(dishFlavor -> dishFlavor.setDishId(dishId));
-            dishFlavorMapper.insert(dishFlavors);
+
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if (!CollectionUtils.isEmpty(flavors)) {
+            flavors.forEach(f -> f.setDishId(dishId));
+            dishFlavorMapper.insert(flavors);
         }
+
+        // 事务提交后再清缓存，避免脏写
+        evictCache(dish.getCategoryId());
+    }
+
+    // 事务外部，单独清缓存
+    @CacheEvict(cacheNames = "Dish", key = "#categoryId")
+    public void evictCache(Long categoryId) {
     }
 
     @Override
@@ -62,6 +73,7 @@ public class DishServiceImpl implements DishService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
+    @CacheEvict(cacheNames = "Dish", allEntries = true)
     public void delete(List<String> ids) {
 
         List<Integer> status = dishMapper.statusById(ids);
@@ -93,6 +105,8 @@ public class DishServiceImpl implements DishService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "Dish", allEntries = true)
     public void updateDish(DishDTO dishDTO) {
         Dish dish = Dish.builder().build();
         BeanUtils.copyProperties(dishDTO, dish);
@@ -109,6 +123,7 @@ public class DishServiceImpl implements DishService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "Dish", allEntries = true)
     public void updateStatus(Integer status, Long id) {
         Dish dish = Dish.builder()
             .id(id)
@@ -117,6 +132,7 @@ public class DishServiceImpl implements DishService {
         dishMapper.update(dish);
     }
     @Override
+    @Cacheable(cacheNames = "Dish" ,key = "#dish.categoryId")
     public List<DishVO> listWithFlavor(Dish dish) {
         List<Dish> dishList = dishMapper.list(dish);
 
@@ -128,7 +144,7 @@ public class DishServiceImpl implements DishService {
 
             //根据菜品id查询对应的口味
             List<DishFlavor> flavors = dishFlavorMapper.selectById(d.getId());
-
+            log.info("微信查询页面查询到的口味数据{}", flavors);
             dishVO.setFlavors(flavors);
             dishVOList.add(dishVO);
         }
@@ -140,6 +156,5 @@ public class DishServiceImpl implements DishService {
     public List<Dish> getListById(Long id) {
         return dishMapper.selectList(id);
     }
-
 
 }

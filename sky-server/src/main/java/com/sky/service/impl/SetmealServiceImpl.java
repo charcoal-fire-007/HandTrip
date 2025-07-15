@@ -22,6 +22,8 @@ import com.sky.vo.SetmealVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +62,13 @@ public class SetmealServiceImpl  implements SetmealService {
             log.info("插入后的值{}",setmealDTO.getSetmealDishes());
             setmealDishMapper.insert(setmealDTO.getSetmealDishes());
         }
+
+        evictSetmealCache(setmealDTO.getCategoryId());
+    }
+
+    @CacheEvict(cacheNames = "setmealCache", key = "#categoryId")
+    public void evictSetmealCache(Long categoryId) {
+        // 只做缓存失效
     }
 
     @Override
@@ -76,6 +85,7 @@ public class SetmealServiceImpl  implements SetmealService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
+    @CacheEvict(cacheNames = "setmealCache",allEntries = true)
     public void update(SetmealDTO setmealDTO) {
         Setmeal setmeal = Setmeal.builder().build();
         BeanUtils.copyProperties(setmealDTO,setmeal);
@@ -88,6 +98,8 @@ public class SetmealServiceImpl  implements SetmealService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "setmealCache",allEntries = true)
+
     public void updateStatus(Integer status, Long id) {
     if(status == StatusConstant.ENABLE){
         List<Dish> dishList = dishMapper.getBySetmealId(id);
@@ -106,7 +118,8 @@ public class SetmealServiceImpl  implements SetmealService {
     setmealMapper.update(setmeal);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "setmealCache",allEntries = true)
     public void deleteBatch(List<Long> ids) {
         ids.forEach(id -> {
             Setmeal setmeal = setmealMapper.getById(id);
@@ -125,6 +138,7 @@ public class SetmealServiceImpl  implements SetmealService {
     }
 
 
+    @Cacheable(cacheNames = "setmealCache" ,key = "#setmeal.categoryId")
     public List<Setmeal> list(Setmeal setmeal) {
         return setmealMapper.list(setmeal);
     }

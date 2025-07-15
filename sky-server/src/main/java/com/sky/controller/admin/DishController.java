@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,7 +72,7 @@ public class DishController {
         dishService.updateDish(dishDTO);
         return Result.success();
     }
-
+    @Operation(summary = "编辑菜品状态",description = "根据id编辑菜品状态")
     @PostMapping("/status/{status}")
     public Result postMethodName(@PathVariable Integer status,Long id) {
         log.info("前端传入的状态值{},菜品id{}",status,id);
