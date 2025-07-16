@@ -32,4 +32,17 @@ public class ShoppingCartController {
             return Result.success(list);
     }
 
+    @DeleteMapping("/clean")
+    @Operation(summary = "清空购物车",description = "清空购物车接口")
+    public Result cleanShoppingCarts() {
+        shoppingCartService.delete();
+        return Result.success();
+    }
+
+    @PostMapping("/sub")
+    @Operation(summary = "减少商品",description = "减少商品")
+    public Result subShoppingCart(@RequestBody ShoppingCartDTO shoppingCartDTO) {
+        shoppingCartService.deleteById(shoppingCartDTO);
+        return Result.success();
+    }
 }
