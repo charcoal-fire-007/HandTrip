@@ -63,6 +63,11 @@ public class OrderServiceImpl implements OrderService {
         if(shoppingCartList == null) {
             throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }
+        String fullAddress = String.join(" ",
+                addressBook.getProvinceName(),
+                addressBook.getCityName(),
+                addressBook.getDistrictName(),
+                addressBook.getDetail());
         Orders orders =  Orders.builder()
                 .userId(userId)
                 .orderTime(LocalDateTime.now())
@@ -72,6 +77,7 @@ public class OrderServiceImpl implements OrderService {
                 .phone(addressBook.getPhone())
                 .consignee(addressBook.getConsignee())
                 .addressBookId(addressBook.getId())
+                .address(fullAddress)
                 .build();
         BeanUtils.copyProperties(ordersSubmitDTO, orders);
         orderMapper.insert(orders);
@@ -179,7 +185,7 @@ public class OrderServiceImpl implements OrderService {
             list.add(d);
         }
 
-        // 3. 组装 VO
+        // 3. 组装
         List<OrderVO> orderVOS = pageList.stream()
                 .map(o -> {
                     OrderVO vo = new OrderVO();
@@ -206,11 +212,6 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetail> orderDetailList = orderDetailMapper.selectById(orders.getId());
 
 
-        //查询地址
-         AddressBook addressBook = addressBookMapper.getById(orders.getAddressBookId());
-        String srtadds = addressBook.getProvinceName() + addressBook.getCityName() + addressBook.getDistrictName()  + addressBook.getDetail();
-        orders.setAddress(srtadds);
-
         // 将该订单及其详情封装到OrderVO并返回
         OrderVO orderVO = new OrderVO();
         BeanUtils.copyProperties(orders, orderVO);
@@ -218,6 +219,77 @@ public class OrderServiceImpl implements OrderService {
 
         return orderVO;
     }
+    /**
+     * 用户取消订单
+     *
+     * @param id
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+        public void userCancelById(Long id) throws Exception{
+            // 根据id查询订单
+            Orders ordersDB = orderMapper.getById(id);
 
+            // 校验订单是否存在
+            if (ordersDB == null) {
+                throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+            }
 
-}
+            //订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+            if (ordersDB.getStatus() > 2) {
+                throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+            }
+
+            Orders orders = new Orders();
+            orders.setId(ordersDB.getId());
+
+            // 订单处于待接单状态下取消，需要进行退款
+            if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+                //调用微信支付退款接口
+//                weChatPayUtil.refund(
+//                        ordersDB.getNumber(), //商户订单号
+//                        ordersDB.getNumber(), //商户退款单号
+//                        new BigDecimal(0.01),//退款金额，单位 元
+//                        new BigDecimal(0.01));//原订单金额
+
+                //支付状态修改为 退款
+                orders.setPayStatus(Orders.REFUND);
+            }
+
+            // 更新订单状态、取消原因、取消时间
+            orders.setStatus(Orders.CANCELLED);
+            orders.setCancelReason("用户取消");
+            orders.setCancelTime(LocalDateTime.now());
+            orderMapper.update(orders);
+        }
+
+    @Override
+        /**
+         * 再来一单
+         *
+         * @param id
+         */
+        public void repetition(Long id) {
+            // 查询当前用户id
+            Long userId = BaseContext.getCurrentId();
+
+            // 根据订单id查询当前订单详情
+            List<OrderDetail> orderDetailList = orderDetailMapper.selectById(id);
+
+            // 将订单详情对象转换为购物车对象
+            List<ShoppingCart> shoppingCartList = orderDetailList.stream().map(x -> {
+                ShoppingCart shoppingCart = new ShoppingCart();
+
+                // 将原订单详情里面的菜品信息重新复制到购物车对象中
+                BeanUtils.copyProperties(x, shoppingCart, "id");
+                shoppingCart.setUserId(userId);
+                shoppingCart.setCreateTime(LocalDateTime.now());
+
+                return shoppingCart;
+            }).toList();
+
+            // 将购物车对象批量添加到数据库
+            shoppingCartMapper.insertBatch(shoppingCartList);
+        }
+    }
+
