@@ -28,7 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -163,13 +166,30 @@ public class OrderServiceImpl implements OrderService {
                         .build()
         );
 
-         List<OrderVO> orderVOS = pageList.stream().map(orders -> {
-            OrderVO orderVO = OrderVO.orderVOBuilder()
-                         .orderDetailList(orderDetailMapper.selectById(orders.getId()))
-                         .build();
-            BeanUtils.copyProperties(orders, orderVO);
-            return orderVO;
-        }).toList();
-        return new PageResult(pageList.getTotal(),orderVOS);
+        // 1. 一次性查出当前页所有订单的明细
+        List<Long> orderIds = pageList.stream()
+                .map(Orders::getId)
+                .toList();
+        List<OrderDetail> allDetails = orderDetailMapper.selectByIds(orderIds);
+
+        // 2. 按订单 id 分组
+        Map<Long, List<OrderDetail>> detailMap = new HashMap<Long, List<OrderDetail>>();
+        for (OrderDetail d : allDetails) {
+            Long key = d.getOrderId();
+            List<OrderDetail> list = detailMap.computeIfAbsent(key, k -> new ArrayList<>());
+            list.add(d);
+        }
+
+        // 3. 组装 VO
+        List<OrderVO> orderVOS = pageList.stream()
+                .map(o -> {
+                    OrderVO vo = new OrderVO();
+                    BeanUtils.copyProperties(o, vo);
+                    vo.setOrderDetailList(detailMap.getOrDefault(o.getId(), List.of()));
+                    return vo;
+                })
+                .toList();
+
+        return new PageResult(pageList.getTotal(), orderVOS);
     }
 }
