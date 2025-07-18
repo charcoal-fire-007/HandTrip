@@ -24,4 +24,7 @@ public interface OrderMapper {
     void update(Orders orders);
 
     Page<Orders> selectPageQuery(OrdersPageQueryDTO build);
+
+    @Select("select * from orders where id = #{id}")
+    Orders getById(Long id);
 }
