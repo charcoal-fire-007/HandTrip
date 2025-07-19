@@ -51,6 +51,11 @@ sky:
   wechat:
     appid: ${sky.wechat.appid}
     secret: ${sky.wechat.secret}
+  take-out:
+    shop:
+      address: 河南省濮阳市华龙区万达广场 SOHO
+      amap:
+        key: a93130e723fee9f888f75e17929c0bc5
 
 aliyun:
   oss:

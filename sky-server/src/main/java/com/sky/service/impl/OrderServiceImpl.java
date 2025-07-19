@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.sky.config.TakeOutConfig;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.*;
@@ -14,6 +15,7 @@ import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.utils.AmapUtil;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
@@ -22,10 +24,12 @@ import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -52,6 +56,26 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private WeChatPayUtil weChatPayUtil;
 
+    @Autowired
+    private TakeOutConfig takeOutConfig;
+
+    private void checkOutOfRange(String userAddress) {
+        try {
+            String shopAddress = takeOutConfig.getShop().getAddress();
+            String amapKey     = takeOutConfig.getShop().getAmap().getKey();
+
+            String shopLocation = AmapUtil.geocode(shopAddress,  amapKey);
+            String userLocation = AmapUtil.geocode(userAddress,  amapKey);
+            long distance = AmapUtil.drivingDistance(shopLocation, userLocation, amapKey);
+
+            if (distance > 10) {
+                throw new OrderBusinessException("超出配送范围");
+            }
+        } catch (IOException e) {
+            throw new OrderBusinessException("高德 API 调用异常：" + e.getMessage());
+        }
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrderSubmitVO submit(OrdersSubmitDTO ordersSubmitDTO) {
@@ -72,6 +96,11 @@ public class OrderServiceImpl implements OrderService {
                 addressBook.getCityName(),
                 addressBook.getDistrictName(),
                 addressBook.getDetail());
+
+
+        checkOutOfRange(fullAddress);
+
+
         Orders orders = Orders.builder()
                 .userId(userId)
                 .orderTime(LocalDateTime.now())
@@ -93,7 +122,8 @@ public class OrderServiceImpl implements OrderService {
         }).toList();
 
         shoppingCartMapper.delete(userId);
-
+        log.info("[下单] userId={}, address={}, cartSize={}",
+                userId, fullAddress, shoppingCartList.size());
         orderDetailMapper.insert(orderDetailList);
         return OrderSubmitVO.builder()
                 .id(orders.getId())
