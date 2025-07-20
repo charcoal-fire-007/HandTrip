@@ -49,4 +49,40 @@
         GROUP BY DATE(create_time)
         ORDER BY order_date
     </select>
+    <select id="orderGroupByDay" resultType="java.util.Map">
+        SELECT DATE(order_time) AS order_date,
+               COUNT(DISTINCT id) AS order_count
+        FROM orders
+        WHERE order_time >= #{begin}
+          AND order_time &lt;= #{end}
+          AND status = #{status}
+        GROUP BY DATE(order_time)
+        ORDER BY order_date
+    </select>
+    <select id="orderTotalGroupByDay" resultType="java.util.Map">
+        SELECT DATE(order_time) AS order_date,
+               COUNT(DISTINCT id) AS order_total
+        FROM orders
+        WHERE order_time >= #{begin}
+          AND order_time &lt;= #{end}
+        GROUP BY DATE(order_time)
+        ORDER BY order_date
+    </select>
+    <select id="getSalesTop10" resultType="com.sky.dto.GoodsSalesDTO">
+        SELECT od.name AS name,
+               SUM(od.number) AS number
+        FROM orders o,
+             order_detail od
+        WHERE o.id = od.order_id
+          AND o.status = 5
+          <if test="begin != null">
+          AND o.order_time &gt;= #{begin}
+          </if>
+          <if test="end != null">
+          AND o.order_time &lt;= #{end}
+          </if>
+        GROUP BY od.name
+        ORDER BY number DESC
+        LIMIT 0,10
+    </select>
 </mapper>

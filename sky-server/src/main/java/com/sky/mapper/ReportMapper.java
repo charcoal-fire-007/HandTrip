@@ -1,5 +1,6 @@
 package com.sky.mapper;
 
+import com.sky.dto.GoodsSalesDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -27,4 +28,10 @@ public interface ReportMapper {
     List<Map<String, Object>> totalUserGroupByDay(
             @Param("end") LocalDateTime end
     );
+
+    List<Map<String, Object>> orderGroupByDay(LocalDateTime begin, LocalDateTime end, Integer status);
+
+    List<Map<String, Object>> orderTotalGroupByDay(LocalDateTime begin, LocalDateTime end);
+
+    List<GoodsSalesDTO> getSalesTop10(LocalDateTime begin, LocalDateTime end);
 }

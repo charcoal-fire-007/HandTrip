@@ -1,8 +1,12 @@
 package com.sky.service.impl;
 
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.entity.Orders;
+import com.sky.mapper.OrderMapper;
 import com.sky.mapper.ReportMapper;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import org.apache.commons.lang.StringUtils;
@@ -10,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.security.spec.XECPublicKeySpec;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -21,6 +26,8 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private ReportMapper reportMapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
     @Override
     public TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end) {
@@ -114,5 +121,87 @@ public class ReportServiceImpl implements ReportService {
                         .map(String::valueOf)
                         .collect(Collectors.joining(",")))
                 .build();
+    }
+    @Override
+    public OrderReportVO getOrderStatistics(LocalDate begin, LocalDate end) {
+
+        // 1. 日期区间
+        List<LocalDate> dateList = begin.datesUntil(end.plusDays(1))
+                .collect(Collectors.toList());
+
+        // 2. 查询每日有效订单数（status = COMPLETED）
+        List<Map<String, Object>> validRows = reportMapper.orderGroupByDay(
+                LocalDateTime.of(begin, LocalTime.MIN),
+                LocalDateTime.of(end, LocalTime.MAX),
+                Orders.COMPLETED);
+
+        // 查询每日总订单数
+        List<Map<String, Object>> totalRows = reportMapper.orderTotalGroupByDay(
+                LocalDateTime.of(begin, LocalTime.MIN),
+                LocalDateTime.of(end, LocalTime.MAX));
+
+        // 3. 转成 Map<LocalDate, Integer>
+        Map<LocalDate, Integer> validMap = validRows.stream()
+                .collect(Collectors.toMap(
+                        row -> ((java.sql.Date) row.get("order_date")).toLocalDate(),
+                        row -> ((Long) row.get("order_count")).intValue()));
+
+        Map<LocalDate, Integer> totalMap = totalRows.stream()
+                .collect(Collectors.toMap(
+                        row -> ((java.sql.Date) row.get("order_date")).toLocalDate(),
+                        row -> ((Long) row.get("order_total")).intValue()));
+
+        // 4. 日维度列表
+        List<Integer> validOrderCountList = dateList.stream()
+                .map(d -> validMap.getOrDefault(d, 0))
+                .toList();
+        List<Integer> orderCountList = dateList.stream()
+                .map(d -> totalMap.getOrDefault(d, 0))
+                .toList();
+
+        // 5. 汇总指标
+        Integer validOrderCount = validOrderCountList.stream().mapToInt(Integer::intValue).sum();
+        Integer totalOrderCount = orderCountList.stream().mapToInt(Integer::intValue).sum();
+        Double orderCompletionRate = totalOrderCount == 0 ? 0.0
+                : validOrderCount.doubleValue() / totalOrderCount;
+
+        // 6. 组装 VO
+        return OrderReportVO.builder()
+                .dateList(dateList.stream()
+                        .map(LocalDate::toString)
+                        .collect(Collectors.joining(",")))
+                .orderCountList(orderCountList.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")))
+                .validOrderCountList(validOrderCountList.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")))
+                .totalOrderCount(totalOrderCount)
+                .validOrderCount(validOrderCount)
+                .orderCompletionRate(orderCompletionRate)
+                .build();
+    }
+
+    @Override
+    public SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end) {
+        
+        List<GoodsSalesDTO> salesDTOS = reportMapper.getSalesTop10(LocalDateTime.of(begin, LocalTime.MIN),
+                LocalDateTime.of(end, LocalTime.MAX));
+        List<String> nameList = salesDTOS.stream()
+                .map(GoodsSalesDTO::getName)
+                .toList();
+        List<Integer> countList = salesDTOS.stream()
+                .map(GoodsSalesDTO::getNumber)
+                .toList();
+        return SalesTop10ReportVO.builder()
+                .nameList(String.join(",", nameList))
+                .numberList(countList.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")))
+                .build();
+        
+        
+        
+
     }
 }
