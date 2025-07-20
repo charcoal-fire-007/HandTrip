@@ -2,8 +2,10 @@ package com.sky.controller.notify;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.sky.mapper.OrderMapper;
 import com.sky.properties.WeChatProperties;
 import com.sky.service.OrderService;
+import com.sky.websocket.WebSocketServer;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,7 @@ public class PayNotifyController {
 
     @Autowired
     private WeChatProperties weChatProperties;
+
 
     /**
      * 支付成功回调

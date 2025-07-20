@@ -21,6 +21,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +58,9 @@ public class OrderServiceImpl implements OrderService {
     private WeChatPayUtil weChatPayUtil;
 
     @Autowired
+    private WebSocketServer webSocketServer;
+
+    @Autowired
     private TakeOutConfig takeOutConfig;
 
     private void checkOutOfRange(String userAddress) {
@@ -68,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
             String userLocation = AmapUtil.geocode(userAddress,  amapKey);
             long distance = AmapUtil.drivingDistance(shopLocation, userLocation, amapKey);
 
-            if (distance > 10) {
+            if (distance > 10000) {
                 throw new OrderBusinessException("超出配送范围");
             }
         } catch (IOException e) {
@@ -175,13 +179,19 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param outTradeNo
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void paySuccess(String outTradeNo) {
-
-        // 根据订单号查询订单
         Orders ordersDB = orderMapper.getByNumber(outTradeNo);
+        if (ordersDB == null) {
+            log.warn("支付回调：订单号不存在 {}", outTradeNo);
+            return;
+        }
+        if (Orders.PAID.equals(ordersDB.getPayStatus())) {
+            log.info("支付回调：订单已支付 {}", outTradeNo);
+            return;
+        }
 
-        // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
         Orders orders = Orders.builder()
                 .id(ordersDB.getId())
                 .status(Orders.TO_BE_CONFIRMED)
@@ -189,7 +199,23 @@ public class OrderServiceImpl implements OrderService {
                 .checkoutTime(LocalDateTime.now())
                 .build();
 
-        orderMapper.update(orders);
+        int row = orderMapper.updateWithStatusCheck(orders);
+        if (row == 0) {
+            throw new RuntimeException("订单状态已变更，支付失败");
+        }
+
+        PaySuccessMsg msg = PaySuccessMsg.builder()
+                .orderId(orders.getId())
+                .content("订单号"+outTradeNo)
+                .build();
+
+        try {
+            webSocketServer.sendToAllClient(JSON.toJSONString(msg));
+        } catch (Exception e) {
+            log.error("WebSocket推送失败, orderId={}", ordersDB.getId(), e);
+        }
+
+        log.info("订单支付成功：{}", outTradeNo);
     }
 
     @Override
