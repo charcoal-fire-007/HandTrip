@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.ReportMapper">
+
+    <select id="subByMap" resultType="java.lang.Double">
+        select sum(orders.amount) from orders
+        <where>
+            <if test="begin != null">
+                and orders.order_time &gt; #{begin}
+            </if>
+            <if test="end != null">
+                and orders.order_time &lt; #{end}
+            </if>
+            <if test="status != null">
+                and orders.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="sumAmountGroupByDay" resultType="map">
+        SELECT DATE(order_time) AS order_date,
+               SUM(amount)      AS total_amount
+        FROM orders
+        WHERE order_time >= #{begin}
+          AND order_time &lt;= #{end}
+          AND status = #{status}
+        GROUP BY DATE(order_time)
+        ORDER BY order_date
+    </select>
+
+    <!-- 每天新增用户 -->
+    <select id="newUserGroupByDay" resultType="map">
+    SELECT DATE(create_time) AS order_date,
+           COUNT(DISTINCT id) AS new_user
+    FROM user
+    WHERE create_time >= #{begin}
+      AND create_time &lt;= #{end}
+    GROUP BY DATE(create_time)
+    ORDER BY order_date
+</select>
+
+<!-- 历史上每天注册人数（用于算累计） -->
+    <select id="totalUserGroupByDay" resultType="map">
+        SELECT DATE(create_time) AS order_date,
+               COUNT(DISTINCT id) AS total_user
+        FROM user
+        WHERE create_time &lt;= #{end}
+        GROUP BY DATE(create_time)
+        ORDER BY order_date
+    </select>
+</mapper>
