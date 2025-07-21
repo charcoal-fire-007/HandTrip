@@ -1,6 +1,11 @@
 package com.sky.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
+import com.alibaba.excel.write.metadata.fill.FillConfig;
 import com.sky.dto.GoodsSalesDTO;
+import com.sky.entity.DailyDetailExcel;
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.ReportMapper;
@@ -14,10 +19,14 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.spec.XECPublicKeySpec;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -253,4 +262,65 @@ public class ReportServiceImpl implements ReportService {
             e.printStackTrace();
         }
     }
+
+//    @Override
+//    public void exportBusinessData(HttpServletResponse response) {
+//        LocalDate end   = LocalDate.now().minusDays(1);
+//        LocalDate begin = end.minusDays(29);
+//
+//        String fileName = "运营数据报表_" + begin + "_" + end + ".xlsx";
+//        response.setContentType(
+//                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+//        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+//                "attachment; filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+//
+//        // 汇总
+//        BusinessDataVO total = workspaceService.getBusinessData(
+//                LocalDateTime.of(begin, LocalTime.MIN),
+//                LocalDateTime.of(end,   LocalTime.MAX));
+//
+//        // 明细
+//        List<DailyDetailExcel> detailList = new ArrayList<>(30);
+//        for (int i = 0; i < 30; i++) {
+//            LocalDate date = begin.plusDays(i);
+//            BusinessDataVO daily = workspaceService.getBusinessData(
+//                    LocalDateTime.of(date, LocalTime.MIN),
+//                    LocalDateTime.of(date, LocalTime.MAX));
+//            detailList.add(new DailyDetailExcel(
+//                    date.toString(),
+//                    BigDecimal.valueOf(daily.getTurnover()),
+//                    daily.getValidOrderCount(),
+//                    daily.getOrderCompletionRate(),
+//                    BigDecimal.valueOf(daily.getUnitPrice()),
+//                    daily.getNewUsers()
+//            ));
+//        }
+//
+//        // 模板填充
+//        try (InputStream in = this.getClass().getResourceAsStream("/template/运营数据报表模板.xlsx")) {
+//            if (in == null) {
+//                throw new IllegalStateException("模板文件不存在");
+//            }
+//
+//            ExcelWriter writer = EasyExcel.write(response.getOutputStream())
+//                    .withTemplate(in)
+//                    .build();
+//            WriteSheet sheet = EasyExcel.writerSheet().build();
+//
+//            // 1) 汇总占位符
+//            Map<String, Object> totalMap = new HashMap<>();
+//            totalMap.put("dateRange", begin + " 至 " + end);
+//            totalMap.put("total", total);
+//
+//            // 2) 填充
+//            writer.fill(totalMap, sheet);                 // 汇总区
+//            writer.fill(detailList,
+//                    FillConfig.builder().forceNewRow(Boolean.TRUE).build(),
+//                    sheet);                           // 明细区（强制新行）
+//
+//            writer.finish();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }
