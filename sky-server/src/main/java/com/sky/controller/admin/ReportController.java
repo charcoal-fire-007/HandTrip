@@ -3,20 +3,29 @@ package com.sky.controller.admin;
 
 import com.sky.result.Result;
 import com.sky.service.ReportService;
-import com.sky.vo.OrderReportVO;
-import com.sky.vo.SalesTop10ReportVO;
-import com.sky.vo.TurnoverReportVO;
-import com.sky.vo.UserReportVO;
+import com.sky.service.UserService;
+import com.sky.service.WorkspaceService;
+import com.sky.vo.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STUniversalMeasure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
 import org.springframework.web.bind.annotation.RequestParam;
 
 
@@ -28,6 +37,7 @@ public class ReportController {
 
     @Autowired
     private ReportService reportService;
+
 
     @GetMapping("/turnoverStatistics")
     @Operation(summary = "营业额统计")
@@ -54,7 +64,16 @@ public class ReportController {
     public Result<SalesTop10ReportVO> getMethodName(@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin, @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
         return Result.success(reportService.getSalesTop10(begin,end));
     }
-    
+
+    /**
+     * 导出运营数据报表
+     * @param response
+     */
+    @GetMapping("/export")
+    @Operation(summary = "导出运营数据报表")
+    public void export(HttpServletResponse response){
+        reportService.exportBusinessData(response);
+    }
 }
 
 
