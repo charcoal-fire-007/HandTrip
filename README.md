@@ -43,8 +43,7 @@
 
 ### 1. 克隆仓库
 ```bash
-git clone https://github.com/your-org/charcoal_fire.git
-cd charcoal_fire
+git clone https://github.com/charcoal-fire-007/HandTrip.git
 ```
 
 ### 2. 环境要求
