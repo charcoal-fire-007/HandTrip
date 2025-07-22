@@ -11,7 +11,7 @@
 支持多商户入驻的微信点餐小程序，涵盖 C 端用户、B 端商户、后台运营三大端
 
 ### 技术栈
-- **核心框架**: Spring Boot 3.x + MyBatis-Plus 
+- **核心框架**: Spring Boot 3.x + MyBatis 
 - **数据存储**: Redis + MySQL 8
 - **接口文档**: Knife4j（OpenAPI3）自动生成
 - **HTTP调用**: OkHttpClient 统一调用层
